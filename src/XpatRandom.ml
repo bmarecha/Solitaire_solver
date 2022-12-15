@@ -8,14 +8,27 @@
 *)
 
 (* The numbers manipulated below will be in [0..randmax[ *)
+
 let randmax = 1_000_000_000
 
 (* Converting an integer n in [0..randmax[ to an integer in [0..limit[ *)
 let reduce n limit =
   Int.(of_float (to_float n /. to_float randmax *. to_float limit))
 
+(*2eme element de paire*)
+let sec_el n graine a b =
+   match n with 
+   | 1 -> graine
+   | 2 -> 1
+   |_ -> if b > a then a - b + randmax else a - b  
+ 
+(*creer la liste des paires*)
+let rec list_paires n graine a b =
+   let p = ( (21* (n-1)) mod 55, sec_el n graine a b ) in 
+   if n = 55 then [p] else p::(list_paires (n+1) 0 b (snd p))
+   
 
-(** DESCRIPTION DE L'ALGORITHME DE GENERATION DES PERMUTATIONS
+(* DESCRIPTION DE L'ALGORITHME DE GENERATION DES PERMUTATIONS
 
 a) Créer tout d'abord les 55 premières paires suivantes:
   * premières composantes : 0 pour la premiere paire,
@@ -39,11 +52,13 @@ c) Un *tirage* à partir de deux FIFO (f1,f2) consiste à prendre
    nommons-la d. Ce d est alors le résultat du tirage, associé
    à deux nouvelles FIFO constituées des restes des anciennes FIFO
    auxquelles on a rajouté respectivement n2 et d (cf `Fifo.push`).
+  
 
 d) On commence alors par faire 165 tirages successifs en partant
    de (f1_init,f2_init). Ces tirages servent juste à mélanger encore
    les FIFO qui nous servent d'état de notre générateur pseudo-aléatoire,
    les entiers issus de ces 165 premiers tirages ne sont pas considérés.
+   
 
 e) La fonction de tirage vue précédemment produit un entier dans
    [0..randmax[. Pour en déduire un entier dans [0..limit[ (ou limit est
@@ -118,6 +133,37 @@ let shuffle_test = function
       45;5;3;41;15;12;31;17;28;8;29;30;37]
   | _ -> failwith "shuffle : unsupported number (TODO)"
 
+let rec separe_list l n f1 f2 =
+   match l with 
+      |[]-> f1, f2
+      |(_,x)::rest -> if n < 25 then separe_list rest (n+1) (x::f1) f2 else separe_list rest (n+1) f1 (x::f2)
+
+let rec print_list l = 
+   match l with
+   |[] -> ()
+   |(x,y)::f -> Printf.printf "(%d, %d) " x y ; print_list f
+
+
+let rec tirage f1 f2 n =
+   let n1,f12 = Fifo.pop f1 in
+   let n2,f22 = Fifo.pop f2 in
+   let new_f1 = Fifo.push n2 f12 in
+   let d= if n2 > n1 then n1 - n2 + randmax else n1 - n2 in
+   let new_f2 = Fifo.push d f22 in 
+   if n = 1 then d, new_f1, new_f2 else tirage new_f1 new_f2 (n-1)
+
+let rec fct_e f1 f2 n cards =
+   let nbr, nf1, nf2 = tirage f1 f2 1 in
+   let toadd = List.nth cards (reduce nbr n) in
+   let newcards = List.filter (fun x -> x != toadd) cards in
+   if n = 1 then [toadd] else toadd::(fct_e nf1 nf2 (n - 1) (newcards))
 
 let shuffle n =
-  shuffle_test n (* TODO: changer en une implementation complete *)
+   let paires = list_paires 1 n 0 0 in
+   let sorted = List.sort (fun (x,y) (z,t) -> x-z) (paires) in
+   let first_24 , last_31 = separe_list sorted 1 [] [] in 
+   let f1_init = Fifo.of_list (List.rev last_31) in 
+   let f2_init = Fifo.of_list (List.rev first_24) in 
+   let _, f1 , f2 = tirage f1_init f2_init 165 in
+   let permutation = fct_e f1 f2 52 (List.init 52 (fun x -> x)) in
+   List.rev permutation
