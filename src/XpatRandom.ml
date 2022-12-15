@@ -133,36 +133,37 @@ let shuffle_test = function
       45;5;3;41;15;12;31;17;28;8;29;30;37]
   | _ -> failwith "shuffle : unsupported number (TODO)"
 
-let rec separe_list l n f1 f2 =
+let rec separe_list l n f1 f2 =(*separer la listes des paires en deux liste f1(24 premiers elements) f2(31 derniers)*)
    match l with 
       |[]-> f1, f2
       |(_,x)::rest -> if n < 25 then separe_list rest (n+1) (x::f1) f2 else separe_list rest (n+1) f1 (x::f2)
 
-let rec print_list l = 
+let rec print_list l = (*fct auxiliers pour aficher une liste*)
    match l with
    |[] -> ()
    |(x,y)::f -> Printf.printf "(%d, %d) " x y ; print_list f
 
 
-let rec tirage f1 f2 n =
+let rec tirage f1 f2 n = (*tirer les elements des listes f1 et f2 n fois pour melanger*)
    let n1,f12 = Fifo.pop f1 in
    let n2,f22 = Fifo.pop f2 in
    let new_f1 = Fifo.push n2 f12 in
    let d= if n2 > n1 then n1 - n2 + randmax else n1 - n2 in
    let new_f2 = Fifo.push d f22 in 
-   if n = 1 then d, new_f1, new_f2 else tirage new_f1 new_f2 (n-1)
+   if n = 1 then d, new_f1, new_f2 else tirage new_f1 new_f2 (n-1) 
+(*qui retourne la derniere valeur ajouté avec les deux nouveaux listes*)
 
-let rec fct_e f1 f2 n cards =
+let rec fct_e f1 f2 n cards =(*gerer la question e*)
    let nbr, nf1, nf2 = tirage f1 f2 1 in
    let toadd = List.nth cards (reduce nbr n) in
    let newcards = List.filter (fun x -> x != toadd) cards in
    if n = 1 then [toadd] else toadd::(fct_e nf1 nf2 (n - 1) (newcards))
 
 let shuffle n =
-   let paires = list_paires 1 n 0 0 in
-   let sorted = List.sort (fun (x,y) (z,t) -> x-z) (paires) in
-   let first_24 , last_31 = separe_list sorted 1 [] [] in 
-   let f1_init = Fifo.of_list (List.rev last_31) in 
+   let paires = list_paires 1 n 0 0 in (*creer la liste*)
+   let sorted = List.sort (fun (x,y) (z,t) -> x-z) (paires) in (*trier la liste*)
+   let first_24 , last_31 = separe_list sorted 1 [] [] in (*separer en deux parties*)
+   let f1_init = Fifo.of_list (List.rev last_31) in (*of_list donne la liste a l'envers donc List.rev a été utilisé*)
    let f2_init = Fifo.of_list (List.rev first_24) in 
    let _, f1 , f2 = tirage f1_init f2_init 165 in
    let permutation = fct_e f1 f2 52 (List.init 52 (fun x -> x)) in
