@@ -89,13 +89,13 @@ let rec fill_colonne list conf n =
   | nb,x::permut -> conf.perm <- permut; fill_colonne ((Card.of_num x)::list) conf (n - 1)
 
 
-  let rec move_king colonne plusieurs =
+  let rec move_king colonne plusieurs = (*mettre le roi fin de colonne pour Baker *)
     match colonne with 
     |[]-> if plusieurs!= 0 then move_king colonne 0 else []
     |(x,z)::[] -> [(x,z)]
     |(x,z)::(y,t)::r -> 
       if x = 13 && y = 13 then (move_king ((x,z)::r) 1)@[(y,t)] else if x = 13 then (y,t)::(move_king ((x,z)::r) 0) else (x,z)::(move_king ((y,t)::r) 0)
-
+      
 let deal_cards conf =
   match conf.game with
   | Freecell -> conf.colonnes <- FArray.init 8 (fun x -> fill_colonne [] conf (if x < 4 then 6 else 7))
