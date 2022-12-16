@@ -109,12 +109,14 @@ let has_registres mode =
   | Seahaven | Freecell -> true
   | _ -> false
 
-let not_match_rule card toadd game =
-  if (Card.to_num card != Card.to_num toadd - 1) then false else
-  match game, card, toadd with
-  | Baker, _, _ -> true
-  | Seahaven, (x,_), (z,_) | Midnight, (x,_), (z,_) -> (x = z)
-  | Freecell, _, _ -> true
+let match_rule card toadd game =
+  match card, toadd with
+  | (x,y), (z,t) ->
+  if (x - 1 != z) then false else
+  match game with
+  | Baker -> true
+  | Seahaven | Midnight -> (y = t)
+  | Freecell -> (Card.num_of_suit y < 2 && Card.num_of_suit t > 1) || (Card.num_of_suit y > 1 && Card.num_of_suit t < 2)
 
 let first_same col y =
   match col with
@@ -123,7 +125,7 @@ let first_same col y =
 
 let check_move move conf =
   match move with
-  | card, _ ->
+  | card, _ -> Printf.printf "Moving %s\n" (Card.to_string card);
     if not ((FArray.exists (fun col -> first_same col card) conf.colonnes) || List.exists (fun el -> el = card) conf.registres) then
       false
     else
@@ -133,7 +135,7 @@ let check_move move conf =
             && (conf.game != Seahaven || r = 13)
             && (FArray.exists (fun col -> col = []) conf.colonnes)
       | (x, Top (y)) -> 
-        Printf.printf "Moving %s to %s\n" (Card.to_string card) (Card.to_string y);if (not_match_rule x y conf.game) then false else
+        Printf.printf "Moving %s to %s\n" (Card.to_string card) (Card.to_string y);if (match_rule x y conf.game) then false else
       (FArray.exists (fun col -> first_same col y) conf.colonnes)
 
 let do_move move conf =
@@ -143,7 +145,8 @@ let do_move move conf =
         conf.colonnes
   | (card, Vide) -> conf.perm <- [Card.to_num card];
         conf.colonnes <- FArray.map (fun col -> match col with | [] -> fill_colonne [] conf 1 | c::rest -> if c = card then rest else col)
-        conf.colonnes
+        conf.colonnes;
+        conf.registres <- List.filter (fun x -> if x = card then false else true) conf.registres
   | (card, Top (card2)) -> conf.colonnes <- FArray.map (fun col -> match col with | [] -> [] | c::rest ->
                 if c = card then
                   rest 
@@ -151,7 +154,8 @@ let do_move move conf =
                   (card::card2::rest)
                 else
                   col)
-    conf.colonnes
+    conf.colonnes;
+    conf.registres <- List.filter (fun x -> if x = card then false else true) conf.registres
 
 let add_depot conf couleur =
   match conf.depot with
@@ -164,7 +168,7 @@ let add_depot conf couleur =
 
 let rec fill_depot conf =
   match (conf.depot) with
-  | (piq, coe, tre, car) -> let maxp, maxco, maxt, maxca = (piq, Card.suit_of_num 1), (tre, Card.suit_of_num 0), (coe, Card.suit_of_num 2), (car, Card.suit_of_num 3) in
+  | (piq, coe, tre, car) -> let maxp, maxco, maxt, maxca = (piq + 1, Card.suit_of_num 1), (coe + 1, Card.suit_of_num 2), (tre + 1, Card.suit_of_num 0), (car + 1, Card.suit_of_num 3) in
   if (FArray.exists (fun col -> first_same col maxp || first_same col maxca || first_same col maxco || first_same col maxt) conf.colonnes) then (
     conf.colonnes <- FArray.map (fun col -> match col with
     | [] -> []
@@ -174,16 +178,23 @@ let rec fill_depot conf =
         else if x = maxt then (add_depot conf 2; rest)
         else x::rest) conf.colonnes;
     fill_depot conf)
-  else
+  else if (List.exists (fun c -> c = maxca || c = maxco || c = maxp || c = maxt) conf.registres) then (
+    conf.registres <- List.filter (fun x -> if x = maxp then (add_depot conf 0; false)
+    else if x = maxca then (add_depot conf 3; false)
+    else if x = maxco then (add_depot conf 1; false)
+    else if x = maxt then (add_depot conf 2; false)
+    else true) conf.registres;
+    fill_depot conf
+  ) else
     print_string ""
 
 let rec check_each_line ic conf nth =
+  fill_depot conf;
   try
     let str = input_line ic in
     let move = get_move str in
     if (check_move move conf) then (
       do_move move conf;
-      fill_depot conf;
       print_string "Move nb";
       print_int nth;
       print_newline ();
@@ -198,7 +209,7 @@ let check_file conf filename =
   let ic = open_in filename in
   let echec = check_each_line ic conf 1 in
   if echec = 0 then (
-    close_in ic; print_string "SUCCESS\n"; exit 0
+    close_in ic; print_string "SUCCES\n"; exit 0
   ) else
     close_in ic;
     print_string "ECHEC ";
