@@ -112,11 +112,11 @@ let has_registres mode =
 let match_rule card toadd game =
   match card, toadd with
   | (x,y), (z,t) ->
-  if (x - 1 != z) then false else
+  if (x != z - 1) then false else
   match game with
   | Baker -> true
   | Seahaven | Midnight -> (y = t)
-  | Freecell -> (Card.num_of_suit y < 2 && Card.num_of_suit t > 1) || (Card.num_of_suit y > 1 && Card.num_of_suit t < 2)
+  | Freecell -> ((Card.num_of_suit y) < 2 && (Card.num_of_suit t) > 1) || (Card.num_of_suit y > 1 && Card.num_of_suit t < 2)
 
 let first_same col y =
   match col with
@@ -125,7 +125,7 @@ let first_same col y =
 
 let check_move move conf =
   match move with
-  | card, _ -> Printf.printf "Moving %s\n" (Card.to_string card);
+  | card, _ ->
     if not ((FArray.exists (fun col -> first_same col card) conf.colonnes) || List.exists (fun el -> el = card) conf.registres) then
       false
     else
@@ -135,8 +135,9 @@ let check_move move conf =
             && (conf.game != Seahaven || r = 13)
             && (FArray.exists (fun col -> col = []) conf.colonnes)
       | (x, Top (y)) -> 
-        Printf.printf "Moving %s to %s\n" (Card.to_string card) (Card.to_string y);if (match_rule x y conf.game) then false else
+        Printf.printf "Moving %s to %s\n" (Card.to_string card) (Card.to_string y);if not (match_rule x y conf.game) then false else (
       (FArray.exists (fun col -> first_same col y) conf.colonnes)
+      )
 
 let do_move move conf =
   match move with
