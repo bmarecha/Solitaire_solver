@@ -16,8 +16,8 @@ let add_if_correct col (game, dest, movelist) =
   match col, dest with
   | ([], _) -> (game, dest, movelist)
   | (card::rest, State.Temp) -> (game, dest, (card, dest)::movelist)
-  | ((r,c)::rest, State. Vide) -> 
-    if (game != State.Midnight && game != State.Baker && (game != State.Seahaven || r = 13)) 
+  | ((r,c)::rest, State.Vide) -> 
+    if (game != State.Midnight && game != State.Baker && (game != State.Seahaven || r = 13) && rest != []) 
     then (game, dest, ((r,c), dest)::movelist)
     else (game, dest, movelist)
   | (card::rest, State.Top(x)) ->
@@ -44,12 +44,19 @@ let all_moves (state:State.state) =
 
 let new_state_creation move curr f states =
   let new_state = State.do_move move curr in
-  if (States.mem new_state states) then
+  if (States.exists (fun state -> (State.verif_depot state > State.verif_depot new_state + 8)
+    || State.compare_state state new_state = 0
+    ) states) then
     Search (f, states)
-  else if (State.verif_depot new_state) then
+  else (
+  print_string "States size :";
+  print_int (States.cardinal states);
+  print_newline ();
+  if (52 = State.verif_depot new_state) then
     Solved new_state
   else
     Search (Fifo.push new_state f, States.add new_state states)
+  )
 
 let rec check_state_moves curr f states = function
       | [] -> Search(f, states)
@@ -63,12 +70,12 @@ let rec parcour_main states filename (fifo:(State.state Fifo.t)) =
   else let curr, f = Fifo.pop fifo in
     resolve_next curr f states filename
 and resolve_next curr f states filename =
+  print_newline ();
   let next_state = check_state_moves curr f states (all_moves curr) in
   match next_state with
   | Solved(s) -> print_solved s filename
   | Search(fifo, states) -> parcour_main states filename fifo
 
 let start_search filename first_state =
-  print_string "test\n";
   let states = States.singleton first_state in
   resolve_next first_state Fifo.empty states filename

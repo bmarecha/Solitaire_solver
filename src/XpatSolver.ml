@@ -65,8 +65,7 @@ let print_game_conf conf =
   | (_,[]) -> print_string "Registres vides\n"; print_colonnes conf.colonnes;
   | (_,registres) -> List.iter (fun c -> Printf.printf "%s " (Card.to_string c)) registres;
   print_newline ();
-  print_colonnes conf.colonnes;
-  print_string "End game conf\n"
+  print_colonnes conf.colonnes
 
 
 let rec fill_colonne list conf n =
@@ -203,6 +202,8 @@ let treat_game conf =
   print_string "Let's deal the cards\n";
   deal_cards conf;
   print_game_conf conf;
+  print_string "Finished the cards\n";
+  print_newline ();
   match conf.mode with
   | Search("") -> print_string "Test Over\n"; exit 0
   | Check(filename) -> check_file conf filename
