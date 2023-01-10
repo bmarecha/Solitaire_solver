@@ -51,8 +51,7 @@ let compare_state s1 s2 =
 
 let verif_depot st =
   match st.depot with
-  | (13, 13, 13, 13) -> true
-  | (x,y,z,t) -> print_int (x + y + z + t); false
+  | (x,y,z,t) -> x + y + z + t
 
 let add_depot depot couleur =
   match depot with
@@ -67,6 +66,11 @@ let first_same col y =
   match col with
   | [] -> false
   | fst::_ -> fst = y
+
+let rec add_registres x registres =
+  match registres with
+  | [] -> [x]
+  | c::rest -> if c < x then x::c::rest else c::(add_registres x registres)
 
 let rec fill_depot state =
   match state with
@@ -112,7 +116,7 @@ let do_move move st =
   match st with
   | {depot; registres; colonnes; moves; game} ->
   match move with
-  | (card, Temp) -> fill_depot {depot; registres = (card::registres);
+  | (card, Temp) -> fill_depot {depot; registres = add_registres card registres;
         colonnes = FArray.map (
           fun col -> match col with 
           | [] -> if FArray.exists (fun c -> c = [card]) colonnes then [] else [card]

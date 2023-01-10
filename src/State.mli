@@ -21,7 +21,7 @@ val has_registres : game -> bool
 val match_rule : Card.card -> Card.card -> game -> bool
 
 val compare_state : state -> state -> int 
-val verif_depot : state -> bool
+val verif_depot : state -> int
 val do_move : move -> state ->state
 
 
