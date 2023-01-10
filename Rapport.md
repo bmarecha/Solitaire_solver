@@ -8,7 +8,8 @@ N etudiant : 21959171
 
 ## Fonctionnalité
 
-Aucune pour l'instant
+XpatSolver est un projet qui contient quatre jeu de solitaire dont chacun a des regles et emplacement different. Notre projet crée une permutation des cartes et les place par rapport a la configuration de jeu demandé. Si on donne une liste des coups, le programme vérifie chacun de ces coups 
+
 
 ## Compilation et execution
 
@@ -24,11 +25,11 @@ $ ./run
 
 - `PArray.ml` : 
 
-- `State.ml` : contient la variable state qui est l'état du jeu apres certains coups. On a utilisé cette classe pour vérifier si les differents coups nous amènent à meme état, si c'est le cas on continue avec une seule liste des coups pour ne pas vérifier si le meme structure est resolvable. 
+- `State.ml` : contient la variable state qui est l'état du jeu apres certains coups. On a utilisé cette classe pour vérifier si les differents coups nous amènent à meme état, si c'est le cas on continue avec une seule liste des coups pour ne pas traité le meme structure plusieurs fois.
 
 - `XpatRandom.ml` : genere une liste aléatoire des cartes/ melanger les cartes.
 
-- `XpatSearch.ml` : 
+- `XpatSearch.ml` : cherche une solution et renvoie SUCCES si il trouve une solution et INSOLUBLE si il n'en trouve aucune.
 
 - `XpatSolver.ml` :
 
@@ -79,3 +80,6 @@ confinement.
 (Misc)
 Cette partie est entièrement libre : remarques, suggestions,
 questions...
+les coups 
+tous les coups
+fifo amélioré
