@@ -26,6 +26,11 @@ type dest = Temp | Vide | Top of (Card.card)
 
 type move = Card.card * dest
 
+let move_to_str = function
+  | (c, Temp) -> string_of_int (Card.to_num c) ^ " T"
+  | (c, Vide) -> string_of_int (Card.to_num c) ^ " V"
+  | (c, Top(x)) -> string_of_int (Card.to_num c) ^ " " ^ string_of_int (Card.to_num x)
+
 let get_move str =
   Scanf.sscanf str "%d %s" (fun x s ->
     match s with
@@ -239,7 +244,7 @@ let treat_game conf =
   match conf.mode with
   | Search("") -> print_string "Test Over\n"; exit 0
   | Check(filename) -> check_file conf filename
-  | Search(filename) -> save_search conf filename
+  | Search(filename) -> save_search filename {colonnes = conf.colonnes; depot = conf.depot; registres = conf.registres; mouvements = []; game = conf.game}
 
 let main () =
   Arg.parse
