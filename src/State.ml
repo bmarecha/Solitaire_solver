@@ -26,7 +26,7 @@ let get_move str =
   )
 
 let print_moves oc s =
-  List.iter (fun move -> output_string oc (move_to_str move); output_char oc '\n') s.moves
+  List.iter (fun move -> output_string oc (move_to_str move); output_char oc '\n') (List.rev s.moves)
 
 let has_registres mode =
   match mode with

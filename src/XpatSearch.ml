@@ -44,14 +44,15 @@ let all_moves (state:State.state) =
 
 let new_state_creation move curr f states =
   let new_state = State.do_move move curr in
-  if (States.exists (fun state -> (State.verif_depot state > State.verif_depot new_state + 8)
+  if (States.exists (fun state -> (State.verif_depot state > State.verif_depot new_state)
     || State.compare_state state new_state = 0
     ) states) then
     Search (f, states)
   else (
-  print_string "States size :";
-  print_int (States.cardinal states);
-  print_newline ();
+  (* print_int (States.cardinal states);
+  print_string " sized States and depot : ";
+  print_int (State.verif_depot new_state);
+  print_newline (); *)
   if (52 = State.verif_depot new_state) then
     Solved new_state
   else
@@ -66,11 +67,10 @@ let rec check_state_moves curr f states = function
 
 let rec parcour_main states filename (fifo:(State.state Fifo.t)) =
   if fifo = Fifo.empty
-  then (print_string "INSOLUBLE"; exit 2)
+  then (print_string "ECHEC\n"; exit 1)
   else let curr, f = Fifo.pop fifo in
     resolve_next curr f states filename
 and resolve_next curr f states filename =
-  print_newline ();
   let next_state = check_state_moves curr f states (all_moves curr) in
   match next_state with
   | Solved(s) -> print_solved s filename
