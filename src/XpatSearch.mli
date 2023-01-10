@@ -1,2 +1,2 @@
 
-val start_search : string -> State.t -> unit
+val start_search : string -> State.state -> unit
