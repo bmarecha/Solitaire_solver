@@ -70,7 +70,7 @@ let first_same col y =
 let rec add_registres x registres =
   match registres with
   | [] -> [x]
-  | c::rest -> if c < x then x::c::rest else c::(add_registres x registres)
+  | c::rest -> if c < x then x::c::rest else c::(add_registres x rest)
 
 let rec fill_depot state =
   match state with
@@ -116,7 +116,7 @@ let do_move move st =
   match st with
   | {depot; registres; colonnes; moves; game} ->
   match move with
-  | (card, Temp) -> fill_depot {depot; registres = add_registres card registres;
+  | (card, Temp) -> fill_depot {depot; registres = (add_registres card registres);
         colonnes = FArray.map (
           fun col -> match col with 
           | [] -> if FArray.exists (fun c -> c = [card]) colonnes then [] else [card]
